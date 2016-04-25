@@ -165,10 +165,11 @@ bool snake_move_player(pos head)
     if(spaces[idx])     // 啥意思？？？
         snake_game_over();
     spaces[idx] = true; // Mark the space as occupied
-    enqueue(head);      // 将头加入队列
+    enqueue(head);      // 将头加入队列，向前走
     g_score += 10;
     
     // Check if we're eating the fruit
+    // 检测是否吃了一个食物
     if(head.x == fruit.x && head.y == fruit.y)
     {
         snake_draw_fruit( );
@@ -177,12 +178,14 @@ bool snake_move_player(pos head)
     else
     {
         // Handle the tail
+        // 已经把头加进去了，现在要去掉一个尾
         pos *tail = dequeue( );
         spaces[snake_cooridinate_to_index( *tail )] = false;
         snake_write_text( tail->y, tail->x, " " );
     }
     
     // Draw the new head 
+    // 把头设置为"S"
     snake_write_text( head.y, head.x, "S" );
     
     // Update scoreboard
@@ -195,20 +198,22 @@ bool snake_move_player(pos head)
 
 int main( int argc, char *argv[] )
 {
-    int key = KEY_RIGHT;
+    int key = KEY_RIGHT;    // 默认方向向右
+    // 初始化窗口
     if( ( g_mainwin = initscr() ) == NULL ) {
         perror( "error initialising ncurses" );
         exit( EXIT_FAILURE );
     }
     
     // Set up
-    srand( time( NULL ) );
-    noecho( );
-    curs_set( 2 );
-    halfdelay( 1 );
-    keypad( g_mainwin, TRUE );
-    g_oldcur = curs_set( 0 );
-    start_color( );
+    
+    srand(time(NULL));      // 设置随机种子
+    noecho();               // 终止键盘上的输入在屏幕上回显
+    curs_set(2);            // 0隐藏物理指针
+    halfdelay(1);
+    keypad(g_mainwin, TRUE);    // 窗口接受键盘信息
+    g_oldcur = curs_set(0);     // 0隐藏物理指针
+    start_color();
     init_pair( 1, COLOR_RED,     COLOR_BLACK );
     init_pair( 2, COLOR_GREEN,   COLOR_BLACK );
     init_pair( 3, COLOR_YELLOW,  COLOR_BLACK );
@@ -222,17 +227,18 @@ int main( int argc, char *argv[] )
     g_height = g_height < DESIRED_HEIGHT ? g_height : DESIRED_HEIGHT; 
     
     // Set up the 2D array of all spaces
+    // 相当于声明一个指针指向二维数组，这个二维数组代表矩形框
     spaces = (bool*) malloc( sizeof( bool ) * g_height * g_width );
 
-    snake_draw_board( );
-    snake_draw_fruit( );
-    pos head = { 5,5 };
-    enqueue( head );
+    snake_draw_board( );        // 画出矩形框
+    snake_draw_fruit( );        // 添加一个食物
+    pos head = { 5,5 };         // 初始化头的位置
+    enqueue( head );            // 将头加入队列
     
     // Event loop
     while( 1 )
     {
-        int in = getch( );
+        int in = getch( );      // 获得一个键盘消息
         if( in != ERR )
             key = in;
         switch( key )
@@ -240,29 +246,29 @@ int main( int argc, char *argv[] )
             case KEY_DOWN:
             case 'k':
             case 'K':
-                head.y++;
+                head.y++;       // 向下
                 break;
             case KEY_RIGHT:
             case 'l':
             case 'L':
-                head.x++;
+                head.x++;       // 向右
                 break;
             case KEY_UP:
             case 'j':
             case 'J':
-                head.y--;
+                head.y--;       // 向上
                 break;
             case KEY_LEFT:
             case 'h':
             case 'H':
-                head.x--;
+                head.x--;       // 向左
                 break;
 
         }
-        if( !snake_in_bounds( head ) )    
-            snake_game_over( );
+        if(!snake_in_bounds(head))  // 如果头越界，则game over    
+            snake_game_over();
         else
-            snake_move_player( head );
+            snake_move_player( head );  // 否则向前走一步
     }
     snake_game_over( );
 }
